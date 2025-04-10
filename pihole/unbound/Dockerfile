@@ -1,4 +1,5 @@
 FROM alpine:3.21.3
+LABEL repo="https://github.com/ZakKemble/docker-scripts"
 
 EXPOSE 5353/udp
 EXPOSE 5353/tcp

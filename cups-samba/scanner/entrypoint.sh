@@ -14,7 +14,7 @@ trap onSignal INT TERM
 
 beep -f 3000 -l 100 -D 50 -n -f 3000 -l 100 -d 50 -n -f 5000 -l 200
 
-useradd -M -u ${BRSCAN_USER:-2000} -g 0 -r -s /usr/sbin/nologin scanner 
+useradd -M -u ${BRSCAN_USER:-2000} -g 0 -r -s /usr/sbin/nologin scanner
 #runuser -u scanner brscan-skey
 brscan-skey
 

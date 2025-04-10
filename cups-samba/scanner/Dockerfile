@@ -1,4 +1,5 @@
 FROM debian:bookworm-slim
+LABEL repo="https://github.com/ZakKemble/docker-scripts"
 
 RUN --mount=src=./pkgs,dst=./pkgs \
 	   apt update \
