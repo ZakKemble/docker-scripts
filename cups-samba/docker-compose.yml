@@ -1,0 +1,36 @@
+
+services:
+
+    cups:
+        container_name: cups
+        build: ./cups
+        restart: always
+        privileged: true
+        ports:
+          - 0.0.0.0:631:631/tcp
+          - 0.0.0.0:631:631/udp
+        environment:
+          CUPSADMIN: print
+          CUPSPASSWORD: password
+        volumes:
+          - /dev/bus/usb:/dev/bus/usb
+
+    samba:
+        container_name: samba
+        image: ghcr.io/servercontainers/samba:smbd-only-a3.21.3-s4.20.6-r1
+        restart: always
+        ports:
+          - 0.0.0.0:445:445/tcp
+        environment:
+          NETBIOS_DISABLE: 1
+          ACCOUNT_myuser: "mypassword"
+          SAMBA_VOLUME_CONFIG_storage1: |
+            [storage1]
+                path = /shares/storage1
+                valid users = myuser
+                guest ok = no
+                read only = no
+                browseable = yes
+                hide dot files = no
+        volumes:
+          - /mnt/storage1:/shares/storage1

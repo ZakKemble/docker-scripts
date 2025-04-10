@@ -1,0 +1,2 @@
+SUBSYSTEMS=="usb", ATTR{idVendor}=="04f9", ACTION=="add", MODE:="0666", RUN+="/path/to/cups-samba/scanner/run.sh &"
+SUBSYSTEMS=="usb", ENV{PRODUCT}=="4f9/248/100", ACTION=="remove", RUN+="/usr/bin/docker stop scanner &"
