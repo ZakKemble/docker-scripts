@@ -1,0 +1,106 @@
+
+services:
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:2025.04.0
+    restart: always
+    ports:
+      - 0.0.0.0:53:53/tcp
+      - 0.0.0.0:53:53/udp
+      - 0.0.0.0:8443:8443/tcp
+      - 0.0.0.0:123:123/udp
+    environment:
+      TZ: Europe/London
+      FTLCONF_webserver_api_password: correct horse battery staple
+      FTLCONF_webserver_port: 8443os
+      FTLCONF_webserver_acl: +${WEB_ACL}/24,+127.0.0.1,+[::1]
+      # FTLCONF_dns_interface must be set for DHCP to work in bridge mode
+      # (otherwise it outputs "no address range available for DHCP request via XXX")
+      # (this is the interface inside the container (usually eth0), not the host!)
+      FTLCONF_dns_interface: eth0
+      # Should be 'LOCAL' when network_mode = host, otherwise 'ALL'
+      FTLCONF_dns_listeningMode: ALL
+      FTLCONF_dns_domain: localnet
+      FTLCONF_dns_upstreams: 172.31.0.20#5353
+      FTLCONF_dns_domainNeeded: true
+      # FTLCONF_dns_reply_host_force4 and FTLCONF_dns_reply_host_IPv4 sets the correct DNS IP address for "pi.hole"
+      FTLCONF_dns_reply_host_force4: true
+      FTLCONF_dns_reply_host_IPv4: ${HOST_IP}
+      FTLCONF_dns_hosts: |
+        ${ROUTER_IP} router.localnet
+        ${HOST_IP} server.localnet
+      FTLCONF_dhcp_active: true
+      FTLCONF_dhcp_start: ${DHCP_START}
+      FTLCONF_dhcp_end: ${DHCP_END}
+      FTLCONF_dhcp_router: ${ROUTER_IP}
+      FTLCONF_dhcp_netmask: 255.255.255.0
+      FTLCONF_dhcp_leasetime: 24h
+      FTLCONF_dhcp_rapidCommit: true
+      FTLCONF_dhcp_multiDNS: true
+      FTLCONF_ntp_ipv6_active: false
+      # Enable proxy mode (so that the correct server-identifier IP is used)
+      # Disable NetBIOS
+      # Ignore WPAD stuff for security reasons
+      # Override dns-server and ntp-server with correct host IP
+      FTLCONF_misc_dnsmasq_lines: |
+        dhcp-proxy
+        dhcp-option=vendor:MSFT,1,2i
+        dhcp-name-match=set:wpad-ignore,wpad
+        dhcp-ignore-names=tag:wpad-ignore
+        dhcp-option=option:dns-server,${HOST_IP},${HOST_IP},${HOST_IP}
+        dhcp-option=option:ntp-server,${HOST_IP}
+    volumes:
+      - ./pihole/data:/etc/pihole
+    cap_add:
+      - NET_ADMIN
+      - SYS_TIME
+      - SYS_NICE
+    networks:
+      dhcp-relay-net:
+        ipv4_address: 172.31.0.10
+
+  bind9:
+    container_name: bind9
+    image: ubuntu/bind9:9.20-24.10_beta
+    restart: always
+    command: "-4"
+    environment:
+      BIND9_USER: root
+      TZ: Europe/London
+    volumes:
+      - ./bind/config:/etc/bind
+      - ./bind/cache:/var/cache/bind
+      - ./bind/zones:/var/lib/bind
+    networks:
+      dhcp-relay-net:
+        ipv4_address: 172.31.0.20
+
+#  unbound:
+#    container_name: unbound
+#    build: ./unbound
+#    restart: always
+#    volumes:
+#      - ./unbound/config:/etc/unbound
+#    cap_add:
+#      - NET_ADMIN
+#    networks:
+#      dhcp-relay-net:
+#        ipv4_address: 172.31.0.20
+
+  dhcphelper:
+    container_name: dhcphelper
+    build: ./dhcphelper
+    restart: always
+    network_mode: host
+    command: -s 172.31.0.10
+    stop_signal: SIGKILL
+    cap_add:
+      - NET_ADMIN
+
+networks:
+  dhcp-relay-net:
+    #enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 172.31.0.0/16
