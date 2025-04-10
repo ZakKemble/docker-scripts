@@ -15,4 +15,4 @@ RUN --mount=src=./pkgs,dst=./pkgs \
 COPY --chown=root:lp ./configs/* /etc/cups/
 COPY --chmod=755 entrypoint.sh /
 
-CMD ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]

@@ -18,4 +18,4 @@ RUN --mount=src=./pkgs,dst=./pkgs \
 COPY --chmod=755 scantofile.sh entrypoint.sh .
 COPY brscan-skey.config /opt/brother/scanner/brscan-skey/
 
-CMD ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
